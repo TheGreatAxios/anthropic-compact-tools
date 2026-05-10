@@ -139,23 +139,24 @@ describe('transformRequest', () => {
     expect(params.tools).toBeUndefined();
   });
 
-  test('injects format instruction into the first user message (first_user placement)', () => {
+  test('does not inject format instruction into the first user message', () => {
     const { params } = transformRequest(
       { ...baseParams, tools: [weatherTool] },
       options,
     );
     const firstMsg = params.messages![0];
     expect(typeof firstMsg.content).toBe('string');
-    expect(firstMsg.content).toContain('# Compact tool calling');
-    expect(firstMsg.content).toContain('get_weather');
+    // User message is unchanged — no format instruction injected
+    expect(firstMsg.content).toBe('Weather?');
   });
 
-  test('injects format instruction into system prompt (system placement)', () => {
+  test('does not inject format instruction into system prompt', () => {
     const { params } = transformRequest(
-      { ...baseParams, system: '', tools: [weatherTool] },
+      { ...baseParams, system: 'Be helpful.', tools: [weatherTool] },
       { ...options, placement: 'system' },
     );
-    expect(params.system).toContain('# Compact tool calling');
+    // System prompt is unchanged — no format instruction injected
+    expect(params.system).toBe('Be helpful.');
   });
 
   test('generates tool plans from the original tool definitions', () => {
@@ -177,7 +178,7 @@ describe('transformRequest', () => {
     expect((tool.input_schema as any).properties.location.description).toBeUndefined();
   });
 
-  test('skips minification when minifyToolDefinitions is false (default)', () => {
+  test('skips minification when minifyToolDefinitions is false', () => {
     const { params } = transformRequest(
       { ...baseParams, tools: [weatherTool] },
       options,

@@ -48,7 +48,7 @@ function resolveOptions(options: CompactToolsOptions): ResolvedOptions {
     syntax: options.syntax ?? 'wire',
     placement: options.placement ?? 'system',
     rewriteHistory: options.rewriteHistory ?? true,
-    minifyToolDefinitions: options.minifyToolDefinitions ?? false,
+    minifyToolDefinitions: options.minifyToolDefinitions ?? true,
   };
 }
 
@@ -85,7 +85,9 @@ export class CompactAnthropic {
   get messages(): Anthropic['messages'] {
     if (!this._messages) {
       const self = this;
-      const originalCreate = this.client.messages.create.bind(this.client);
+      // Arrow function preserves `this` (the Messages instance) so internal
+      // `this._client` access (set by APIResource constructor) still works.
+      const originalCreate = (...args: any[]) => (this.client.messages as any).create(...args);
       this._messages = new Proxy(this.client.messages, {
         get(target, prop, receiver) {
           if (prop === 'create') {

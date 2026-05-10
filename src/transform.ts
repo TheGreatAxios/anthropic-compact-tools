@@ -3,19 +3,22 @@
  *
  * Before the API call:
  *   1. Minify tool definitions (strip verbose descriptions from JSON Schema)
- *   2. Plan tools (generate compact signatures with full descriptions)
- *   3. Inject format instruction into system prompt / first user message
- *   4. Rewrite conversation history (tool_use → compact)
+ *   2. Plan tools (for history rewriting and response parsing)
+ *   3. Rewrite conversation history (tool_use → compact)
  *
  * After the API call (non-streaming):
  *   1. Scan text content blocks for compact format
  *   2. Convert to synthetic tool_use blocks
  *
+ * No format instruction is injected — the model uses native JSON output.
+ * Compact format is only used for history compression and as an optional
+ * output format the model may adopt naturally from seeing it in context.
+ *
  * For streaming, see stream.ts.
  */
 
 import type { ToolPlan, CompactToolsOptions, AnthropicTool, MessagesCreateParams, MessageResponse, ContentBlock } from './types.ts';
-import { planTools, generateFormatInstruction } from './signature.ts';
+import { planTools } from './signature.ts';
 import { rewriteHistory } from './serialize.ts';
 import { parseCompactCalls } from './parser.ts';
 
@@ -29,8 +32,9 @@ function genId(): string {
  * Keeps the schema valid (types, enums, items, required) but strips description
  * text that bloats the cached prefix.
  *
- * Full descriptions are preserved in the compact signatures injected into
- * the system prompt / first user message — that's what the model actually reads.
+ * The model still sees full descriptions via the Anthropic tool definition system
+ * (the `description` field on the tool itself is preserved). Only per-property
+ * descriptions in input_schema are stripped.
  */
 export function minifyToolDefs(tools: AnthropicTool[]): AnthropicTool[] {
   return tools.map(tool => {
@@ -64,13 +68,19 @@ export function minifyToolDefs(tools: AnthropicTool[]): AnthropicTool[] {
 /**
  * Transform request parameters before sending to the Anthropic API.
  *
- * Three optimizations:
- *  1. Minify tool definitions (smaller input = less cache write cost)
- *  2. Inject compact format instruction (tells model to use compact output)
- *  3. Rewrite conversation history (prior tool_use → compact text for self-consistency)
+ * Two optimizations (both input-side only):
+ *  1. Minify tool definitions — strip verbose descriptions from JSON Schema
+ *  2. Rewrite conversation history — prior tool_use → compact text
  *
- * Preserves prompt caching: tools array stays intact, format instruction
- * goes after the cache breakpoint.
+ * No format instruction is injected into the prompt. The model uses native
+ * JSON tool_use blocks for its own output. Compact format is only used for
+ * history compression (smaller multi-turn context).
+ *
+ * On the output side, transformResponse() transparently accepts both native
+ * JSON tool_use blocks and compact <call> format if the model picks it up
+ * from history.
+ *
+ * Preserves prompt caching: minified tools array stays intact.
  */
 export function transformRequest(
   params: MessagesCreateParams,
@@ -86,35 +96,16 @@ export function transformRequest(
     return { params, plans: [] };
   }
 
-  // Plan tools from ORIGINAL definitions (full descriptions for compact manual)
+  // Plan tools (needed for history rewriting and response parsing)
   const plans = planTools(tools);
 
-  // Optionally minify tool definitions (hidden feature, opt-in only)
+  // Minify tool definitions to reduce cached input tokens
   const finalTools = options.minifyToolDefinitions ? minifyToolDefs(tools) : tools;
-
-  const instruction = generateFormatInstruction(options.syntax, plans);
 
   // Clone params to avoid mutating the caller's object
   const out: MessagesCreateParams = { ...params, tools: finalTools as typeof params.tools };
 
-  // Inject format instruction
-  if (options.placement === 'system') {
-    const existingSystem = out.system ?? '';
-    const sysStr = typeof existingSystem === 'string' ? existingSystem : '';
-    out.system = `${sysStr}\n\n${instruction}`.trim();
-  } else {
-    // Prepend to first user message
-    const msgs = [...(out.messages ?? [])];
-    if (msgs.length > 0) {
-      const first = { ...msgs[0] };
-      const content = typeof first.content === 'string' ? first.content : '';
-      first.content = `${instruction}\n\n${content}`;
-      msgs[0] = first;
-    }
-    out.messages = msgs;
-  }
-
-  // Rewrite history if enabled
+  // Rewrite history if enabled — convert past tool_use blocks to compact format
   if (options.rewriteHistory) {
     out.messages = rewriteHistory(out.messages ?? [], plans, options.syntax);
   }

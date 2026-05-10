@@ -63,8 +63,8 @@ export function findToolResultSpans(text: string): Array<{ start: number; end: n
 
 // ── Main parse entry point ───────────────────────────────────
 
-export function parseCompactCalls(text: string, plans: ToolPlan[]): ParsedCall[] {
-  const planByName = new Map(plans.map(p => [p.name, p]));
+export function parseCompactCalls(text: string, plans?: ToolPlan[]): ParsedCall[] {
+  const planByName = plans ? new Map(plans.map(p => [p.name, p])) : new Map();
   const calls: ParsedCall[] = [];
 
   // Try both formats — skip malformed calls instead of crashing
@@ -72,7 +72,8 @@ export function parseCompactCalls(text: string, plans: ToolPlan[]): ParsedCall[]
     try {
       const { toolName, argsBody } = splitNameAndBody(span.body);
       const plan = planByName.get(toolName);
-      if (!plan) continue;
+      // If no plans provided, still parse but don't validate tool names
+      if (plans && !plan) continue;
       calls.push({ toolName, input: encodeArgs(argsBody, plan), start: span.start, end: span.end });
     } catch {
       // Malformed call — skip it, don't lose other calls

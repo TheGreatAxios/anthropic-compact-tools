@@ -93,9 +93,13 @@ describe('CompactAnthropic', () => {
       tools: [weatherTool],
     } as any);
 
-    // Assert: request was transformed (format instruction injected into system prompt)
+    // Assert: request was transformed (tools minified by default, no format instruction)
     expect(capturedParams).toBeDefined();
-    expect(capturedParams.system).toContain('# Compact tool calling');
+    // Tool definitions are minified (descriptions stripped)
+    expect((capturedParams.tools[0].input_schema as any).properties.location.description).toBeUndefined();
+    // No format instruction injected into system or messages
+    expect(capturedParams.system).toBeUndefined();
+    expect(capturedParams.messages[0].content).toBe('Weather?');
 
     // Assert: response was transformed (compact text → tool_use block)
     const toolUse = result.content.find((c: any) => c.type === 'tool_use');
