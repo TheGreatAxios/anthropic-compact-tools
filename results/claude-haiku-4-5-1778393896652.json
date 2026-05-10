@@ -1,0 +1,123 @@
+{
+  "model": "claude-haiku-4-5",
+  "timestamp": "2026-05-10T06:18:16.652Z",
+  "native": {
+    "out": 1322,
+    "in": 9126,
+    "acc": 5
+  },
+  "wire": {
+    "out": 1703,
+    "in": 11678,
+    "acc": 5
+  },
+  "tr": {
+    "out": 1651,
+    "in": 11744,
+    "acc": 5
+  },
+  "nativeCost": 0.015736,
+  "wireCost": 0.020193,
+  "trCost": 0.019999,
+  "perPrompt": [
+    {
+      "diff": 0,
+      "native": 54,
+      "wire": 55,
+      "tr": 54,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 1,
+      "native": 57,
+      "wire": 57,
+      "tr": 57,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 2,
+      "native": 60,
+      "wire": 60,
+      "tr": 60,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 3,
+      "native": 124,
+      "wire": 124,
+      "tr": 124,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 4,
+      "native": 93,
+      "wire": 93,
+      "tr": 93,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 5,
+      "native": 107,
+      "wire": 107,
+      "tr": 141,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 6,
+      "native": 90,
+      "wire": 98,
+      "tr": 98,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 7,
+      "native": 192,
+      "wire": 197,
+      "tr": 197,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 8,
+      "native": 94,
+      "wire": 119,
+      "tr": 119,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 9,
+      "native": 318,
+      "wire": 323,
+      "tr": 328,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 10,
+      "native": 133,
+      "wire": 470,
+      "tr": 380,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    }
+  ]
+}
