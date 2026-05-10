@@ -1,0 +1,111 @@
+{
+  "model": "claude-sonnet-4-5",
+  "timestamp": "2026-05-10T04:56:20.045Z",
+  "nativeTotal": 1525,
+  "wireTotal": 0,
+  "trTotal": 0,
+  "nativeAcc": 5,
+  "wireAcc": 0,
+  "trAcc": 0,
+  "perPrompt": [
+    {
+      "diff": 0,
+      "native": 53,
+      "wire": 0,
+      "tr": 0,
+      "nOk": true,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 1,
+      "native": 56,
+      "wire": 0,
+      "tr": 0,
+      "nOk": true,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 2,
+      "native": 59,
+      "wire": 0,
+      "tr": 0,
+      "nOk": true,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 3,
+      "native": 123,
+      "wire": 0,
+      "tr": 0,
+      "nOk": true,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 4,
+      "native": 92,
+      "wire": 0,
+      "tr": 0,
+      "nOk": true,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 5,
+      "native": 109,
+      "wire": 0,
+      "tr": 0,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 6,
+      "native": 100,
+      "wire": 0,
+      "tr": 0,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 7,
+      "native": 194,
+      "wire": 0,
+      "tr": 0,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 8,
+      "native": 119,
+      "wire": 0,
+      "tr": 0,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 9,
+      "native": 351,
+      "wire": 0,
+      "tr": 0,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 10,
+      "native": 269,
+      "wire": 0,
+      "tr": 0,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "name": "anthropic-compact-tools",
+  "version": "0.1.0",
+  "description": "Compact-syntax tool calling for the Anthropic TypeScript SDK. Replaces verbose tool_use JSON with a compact wire format to reduce output tokens.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit",
+    "bench": "bun run bench/eval.ts",
+    "bench:live": "bun run bench/live.ts",
+    "compare": "bun run bench/compare.ts"
+  },
+  "keywords": [
+    "anthropic",
+    "claude",
+    "tool-calling",
+    "tools",
+    "compact",
+    "wire-format",
+    "tokens",
+    "llm",
+    "prompt-caching"
+  ],
+  "license": "MIT",
+  "author": "Sawyer Cutler <sawyer@dirtroad.dev>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheGreatAxios/anthropic-compact-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TheGreatAxios/anthropic-compact-tools/issues"
+  },
+  "homepage": "https://github.com/TheGreatAxios/anthropic-compact-tools#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.1",
+    "js-tiktoken": "^1.0.21"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.13",
+    "typescript": "^6.0.3"
+  }
+}

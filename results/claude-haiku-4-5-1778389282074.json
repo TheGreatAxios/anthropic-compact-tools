@@ -1,0 +1,117 @@
+{
+  "model": "claude-haiku-4-5",
+  "timestamp": "2026-05-10T05:01:22.074Z",
+  "nativeTotal": 1577,
+  "wireTotal": 1442,
+  "trTotal": 1659,
+  "nativeAcc": 5,
+  "wireAcc": 5,
+  "trAcc": 5,
+  "nativeOutTokens": 1577,
+  "wireOutTokens": 1442,
+  "trOutTokens": 1659,
+  "nativeInTokens": 9546,
+  "wireInTokens": 12098,
+  "trInTokens": 12164,
+  "perPrompt": [
+    {
+      "diff": 0,
+      "native": 54,
+      "wire": 16,
+      "tr": 96,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 1,
+      "native": 57,
+      "wire": 19,
+      "tr": 39,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 2,
+      "native": 60,
+      "wire": 60,
+      "tr": 77,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 3,
+      "native": 124,
+      "wire": 124,
+      "tr": 248,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 4,
+      "native": 93,
+      "wire": 93,
+      "tr": 93,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 5,
+      "native": 141,
+      "wire": 141,
+      "tr": 107,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 6,
+      "native": 99,
+      "wire": 98,
+      "tr": 98,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 7,
+      "native": 194,
+      "wire": 194,
+      "tr": 194,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 8,
+      "native": 119,
+      "wire": 119,
+      "tr": 119,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 9,
+      "native": 374,
+      "wire": 318,
+      "tr": 313,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    },
+    {
+      "diff": 10,
+      "native": 262,
+      "wire": 260,
+      "tr": 275,
+      "nOk": false,
+      "wOk": false,
+      "tOk": false
+    }
+  ]
+}
