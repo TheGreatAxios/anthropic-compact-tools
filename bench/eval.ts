@@ -109,24 +109,43 @@ function buildCompactSignatures(): string {
 const enc = getEncoding('o200k_base');
 const t = (s: string): number => enc.encode(s).length;
 
+// ── Helpers ───────────────────────────────────────────────────
+
+function fmt(n: number): string {
+  return n.toLocaleString();
+}
+
+function pct(a: number, b: number): string {
+  if (b === 0) return '—';
+  return ((a / b - 1) * 100).toFixed(1) + '%';
+}
+
 // ── Run ───────────────────────────────────────────────────────
 
-console.log('\n══════════════════════════════════════════════════');
-console.log('  Offline Benchmark — Token Cost Comparison');
-console.log('══════════════════════════════════════════════════\n');
+console.log('');
+console.log('  ═══════════════════════════════════════════════════════════════');
+console.log('  │   Offline Benchmark — Token Cost Comparison                │');
+console.log('  │   No API key required                                      │');
+console.log('  ═══════════════════════════════════════════════════════════════');
+console.log('');
 
 // Tool definitions
 const nativeDefs = buildNativeToolDefs();
 const compactSigs = buildCompactSignatures();
-console.log('Tool definitions (9 tools):');
-console.log(`  Native JSON:     ${t(nativeDefs).toString().padStart(4)} tok`);
-console.log(`  Compact sigs:    ${t(compactSigs).toString().padStart(4)} tok`);
-console.log(`  Savings:         ${((1 - t(compactSigs) / t(nativeDefs)) * 100).toFixed(1)}%\n`);
+console.log('  Tool definitions (9 tools):');
+console.log('  ┌───────────────────────┬──────────┬──────────┬──────────┐');
+console.log('  │ Format                │ Tokens   │ Δ        │          │');
+console.log('  ├───────────────────────┼──────────┼──────────┼──────────┤');
+console.log('  │ Native JSON           │ ' + fmt(t(nativeDefs)).padStart(8) + ' │        — │          │');
+console.log('  │ Compact signatures    │ ' + fmt(t(compactSigs)).padStart(8) + ' │ ' + pct(t(compactSigs), t(nativeDefs)).padStart(8) + ' │          │');
+console.log('  └───────────────────────┴──────────┴──────────┴──────────┘');
+console.log('');
 
 // Single calls
-console.log('Per-call comparison:');
-console.log('  Case'.padEnd(30), 'Native'.padEnd(7), 'Wire'.padEnd(7), 'ToolRes'.padEnd(7), 'Best');
-console.log('  ' + '-'.repeat(70));
+console.log('  Per-call comparison:');
+console.log('  ┌──────────────────────────┬──────────┬──────────┬──────────┬──────────┐');
+console.log('  │ Tool                     │   Native │     Wire │ ToolResult│ Best     │');
+console.log('  ├──────────────────────────┼──────────┼──────────┼──────────┼──────────┤');
 
 let nativeTotal = 0, wireTotal = 0, trTotal = 0;
 
@@ -137,25 +156,51 @@ for (const c of singleCases) {
   const tr = t(toolResultCall(c.name, c.args, tool));
   nativeTotal += n; wireTotal += w; trTotal += tr;
   const best = Math.min(n, w, tr);
-  const bestLabel = best === n ? 'native' : best === w ? 'wire' : 'tool_res';
-  console.log(`  ${c.name.padEnd(28)} ${n.toString().padEnd(7)} ${w.toString().padEnd(7)} ${tr.toString().padEnd(7)} ${bestLabel}`);
+  const bestLabel = best === n ? 'Native' : best === w ? 'Wire' : 'ToolRes';
+  console.log(
+    '  │ ' + c.name.padEnd(24) +
+    ' │ ' + fmt(n).padStart(8) +
+    ' │ ' + fmt(w).padStart(8) +
+    ' │ ' + fmt(tr).padStart(8) +
+    ' │ ' + bestLabel.padStart(8) + ' │',
+  );
 }
 
-console.log('  ' + '-'.repeat(70));
-console.log(`  ${'TOTAL'.padEnd(28)} ${nativeTotal.toString().padEnd(7)} ${wireTotal.toString().padEnd(7)} ${trTotal.toString().padEnd(7)}`);
-console.log(`  ${'Savings vs native'.padEnd(28)} ${'—'.padEnd(7)} ${((1 - wireTotal/nativeTotal) * 100).toFixed(1)+'%'.padEnd(6)} ${((1 - trTotal/nativeTotal) * 100).toFixed(1)+'%'}`);
+console.log('  ├──────────────────────────┼──────────┼──────────┼──────────┼──────────┤');
+console.log(
+  '  │ ' + 'TOTAL'.padEnd(24) +
+  ' │ ' + fmt(nativeTotal).padStart(8) +
+  ' │ ' + fmt(wireTotal).padStart(8) +
+  ' │ ' + fmt(trTotal).padStart(8) +
+  ' │          │',
+);
+console.log(
+  '  │ ' + 'Savings vs native'.padEnd(24) +
+  ' │        —' +
+  ' │ ' + pct(wireTotal, nativeTotal).padStart(8) +
+  ' │ ' + pct(trTotal, nativeTotal).padStart(8) +
+  ' │          │',
+);
+console.log('  └──────────────────────────┴──────────┴──────────┴──────────┴──────────┘');
 
 // Parallel calls
-console.log('\nParallel calls (4 get_time):');
+console.log('');
+console.log('  Parallel calls (4 × get_time):');
 const pNative = [0,1,2,3].map(() => t(nativeToolUse('get_time', { timezone: 'America/New_York' }))).reduce((a,b) => a+b, 0);
 const pWire = t(`<call>getTime timezone="America/New_York"</call>\n<call>getTime timezone="Europe/London"</call>\n<call>getTime timezone="Asia/Tokyo"</call>\n<call>getTime timezone="Australia/Sydney"</call>`);
 const pTR = t(`<tool_result name="getTime">timezone=America/New_York</tool_result>\n<tool_result name="getTime">timezone=Europe/London</tool_result>\n<tool_result name="getTime">timezone=Asia/Tokyo</tool_result>\n<tool_result name="getTime">timezone=Australia/Sydney</tool_result>`);
-console.log(`  Native:    ${pNative} tok`);
-console.log(`  Wire:      ${pWire} tok  (${((1 - pWire/pNative) * 100).toFixed(1)}%)`);
-console.log(`  ToolResult:${pTR} tok  (${((1 - pTR/pNative) * 100).toFixed(1)}%)`);
+console.log('  ┌───────────────────────┬──────────┬──────────┐');
+console.log('  │ Format                │ Tokens   │ Δ        │');
+console.log('  ├───────────────────────┼──────────┼──────────┤');
+console.log('  │ Native                │ ' + fmt(pNative).padStart(8) + ' │        — │');
+console.log('  │ Wire                  │ ' + fmt(pWire).padStart(8) + ' │ ' + pct(pWire, pNative).padStart(8) + ' │');
+console.log('  │ ToolResult            │ ' + fmt(pTR).padStart(8) + ' │ ' + pct(pTR, pNative).padStart(8) + ' │');
+console.log('  └───────────────────────┴──────────┴──────────┘');
 
 // Multi-turn simulation
-console.log('\nMulti-turn (10 turns, 3 calls/turn):');
+console.log('');
+console.log('  Multi-turn simulation (10 rounds, 3 calls each):');
+
 function simTenTurns(callSize: number, resultSize: number): { history: number; output: number } {
   let history = 0;
   let totalInput = 0;
@@ -174,7 +219,6 @@ function simTenTurns(callSize: number, resultSize: number): { history: number; o
   return { history: totalInput, output: totalOutput };
 }
 
-// Average call/result sizes from single cases
 const avgNativeCall = Math.round(nativeTotal / singleCases.length);
 const avgWireCall = Math.round(wireTotal / singleCases.length);
 const avgTRCall = Math.round(trTotal / singleCases.length);
@@ -184,18 +228,28 @@ const native = simTenTurns(avgNativeCall, avgResult);
 const wire = simTenTurns(avgWireCall, avgResult);
 const tr = simTenTurns(avgTRCall, avgResult);
 
-console.log(`                 Input (turns 2-10)  Output (all turns)  Total`);
-console.log(`  Native:        ${native.history.toString().padStart(5)} tok        ${native.output.toString().padStart(5)} tok        ${(native.history + native.output).toString().padStart(5)} tok`);
-console.log(`  Wire:          ${wire.history.toString().padStart(5)} tok        ${wire.output.toString().padStart(5)} tok        ${(wire.history + wire.output).toString().padStart(5)} tok  (${((1 - (wire.history+wire.output)/(native.history+native.output))*100).toFixed(1)}%)`);
-console.log(`  ToolResult:    ${tr.history.toString().padStart(5)} tok        ${tr.output.toString().padStart(5)} tok        ${(tr.history + tr.output).toString().padStart(5)} tok  (${((1 - (tr.history+tr.output)/(native.history+native.output))*100).toFixed(1)}%)`);
+console.log('  ┌───────────────────────┬────────────┬────────────┬────────────┐');
+console.log('  │ Format                │ History in │ Output     │ Total      │');
+console.log('  ├───────────────────────┼────────────┼────────────┼────────────┤');
+const nativeTotal2 = native.history + native.output;
+const wireTotal2 = wire.history + wire.output;
+const trTotal2 = tr.history + tr.output;
+console.log('  │ Native                │ ' + fmt(native.history).padStart(10) + ' │ ' + fmt(native.output).padStart(10) + ' │ ' + fmt(nativeTotal2).padStart(10) + ' │');
+console.log('  │ Wire                  │ ' + fmt(wire.history).padStart(10) + ' │ ' + fmt(wire.output).padStart(10) + ' │ ' + fmt(wireTotal2).padStart(10) + ' │' + (wireTotal2 < nativeTotal2 ? ' ✅' : ' ❌'));
+console.log('  │ ToolResult            │ ' + fmt(tr.history).padStart(10) + ' │ ' + fmt(tr.output).padStart(10) + ' │ ' + fmt(trTotal2).padStart(10) + ' │' + (trTotal2 < nativeTotal2 ? ' ✅' : ' ❌'));
+console.log('  └───────────────────────┴────────────┴────────────┴────────────┘');
+console.log('');
 
 // Cost estimate
-console.log('\nCost estimate (Sonnet $3/M input, $15/M output, 1000 initiatives/day):');
-const nativeCost = (native.history + native.output) * 1000 / 1_000_000 * 3 + native.output * 1000 / 1_000_000 * 12; // 12 = 15-3 (output premium)
-const wireCost = (wire.history + wire.output) * 1000 / 1_000_000 * 3 + wire.output * 1000 / 1_000_000 * 12;
-const trCost = (tr.history + tr.output) * 1000 / 1_000_000 * 3 + tr.output * 1000 / 1_000_000 * 12;
-console.log(`  Native:    $${nativeCost.toFixed(2)}/day`);
-console.log(`  Wire:      $${wireCost.toFixed(2)}/day  (save $${(nativeCost - wireCost).toFixed(2)})`);
-console.log(`  ToolResult:$${trCost.toFixed(2)}/day  (save $${(nativeCost - trCost).toFixed(2)})`);
-
-console.log('\nDone.');
+console.log('  Cost estimate (Sonnet $3/M input, $15/M output, 1000 runs/day):');
+const nativeCost = nativeTotal2 * 1000 / 1_000_000 * 3 + native.output * 1000 / 1_000_000 * 12;
+const wireCost = wireTotal2 * 1000 / 1_000_000 * 3 + wire.output * 1000 / 1_000_000 * 12;
+const trCost = trTotal2 * 1000 / 1_000_000 * 3 + tr.output * 1000 / 1_000_000 * 12;
+console.log('  ┌───────────────────────┬───────────┐');
+console.log('  │ Format                │ Cost/day  │');
+console.log('  ├───────────────────────┼───────────┤');
+console.log('  │ Native                │  $' + nativeCost.toFixed(2).padStart(7) + ' │');
+console.log('  │ Wire                  │  $' + wireCost.toFixed(2).padStart(7) + ' │' + (wireCost < nativeCost ? ' ✅' : ' ❌'));
+console.log('  │ ToolResult            │  $' + trCost.toFixed(2).padStart(7) + ' │' + (trCost < nativeCost ? ' ✅' : ' ❌'));
+console.log('  └───────────────────────┴───────────┘');
+console.log('');

@@ -85,42 +85,91 @@ async function run(mode: string) {
 }
 
 async function main() {
-  console.log('\n══════════════════════════════════════════════════');
-  console.log('  Compact Tool Calling — A/B Comparison');
-  console.log(`  Model: ${MODEL}`);
-  console.log(`  Prompt: "${PROMPT}"`);
-  console.log('══════════════════════════════════════════════════\n');
+  console.log('');
+  console.log('  ═══════════════════════════════════════════════════════════════');
+  console.log('  │   Compact Tool Calling — A/B Comparison                    │');
+  console.log('  │   Model: ' + MODEL.padEnd(48) + '│');
+  console.log('  │   Prompt: "' + PROMPT.slice(0, 48).padEnd(48) + '│');
+  console.log('  ═══════════════════════════════════════════════════════════════');
+  console.log('');
 
   const native = await run('native');
   const wire = await run('wire');
   const tr = await run('tool_result');
 
-  function row(r: typeof native) {
-    const savings = r.mode === 'native' ? '—' : ((1 - r.outputTok / native.outputTok) * 100).toFixed(1) + '%';
-    return `  ${r.mode.padEnd(12)} ${r.outputTok.toString().padStart(5)} tok out  ${r.inputTok.toString().padStart(6)} tok in  ${r.totalTok.toString().padStart(6)} tok total  ${r.elapsedMs}ms  calls:${r.toolCalls}  ${savings}`;
+  const fmt = (n: number) => n.toLocaleString();
+
+  function makeRow(r: typeof native) {
+    const savings = r.mode === 'native'
+      ? '—'
+      : ((1 - r.outputTok / native.outputTok) * 100).toFixed(1) + '%';
+    return {
+      mode: r.mode,
+      out: r.outputTok,
+      inp: r.inputTok,
+      total: r.totalTok,
+      ms: r.elapsedMs,
+      calls: r.toolCalls,
+      savings,
+    };
   }
 
-  console.log('  ┌──────────────┬──────────┬──────────┬──────────┬────────┬────────┬────────┐');
-  console.log('  │ Mode         │ Output   │ Input    │ Total    │ Time   │ Calls  │ Saving │');
-  console.log('  ├──────────────┼──────────┼──────────┼──────────┼────────┼────────┼────────┤');
-  console.log(`  │ ${native.mode.padEnd(12)} │ ${native.outputTok.toString().padEnd(8)} │ ${native.inputTok.toString().padEnd(8)} │ ${native.totalTok.toString().padEnd(8)} │ ${native.elapsedMs.toString().padEnd(6)} │ ${native.toolCalls.toString().padEnd(6)} │ ${'—'.padEnd(6)} │`);
-  console.log(`  │ ${wire.mode.padEnd(12)} │ ${wire.outputTok.toString().padEnd(8)} │ ${wire.inputTok.toString().padEnd(8)} │ ${wire.totalTok.toString().padEnd(8)} │ ${wire.elapsedMs.toString().padEnd(6)} │ ${wire.toolCalls.toString().padEnd(6)} │ ${((1 - wire.outputTok / native.outputTok) * 100).toFixed(1)+'%'.padEnd(5)} │`);
-  console.log(`  │ ${tr.mode.padEnd(12)} │ ${tr.outputTok.toString().padEnd(8)} │ ${tr.inputTok.toString().padEnd(8)} │ ${tr.totalTok.toString().padEnd(8)} │ ${tr.elapsedMs.toString().padEnd(6)} │ ${tr.toolCalls.toString().padEnd(6)} │ ${((1 - tr.outputTok / native.outputTok) * 100).toFixed(1)+'%'.padEnd(5)} │`);
-  console.log('  └──────────────┴──────────┴──────────┴──────────┴────────┴────────┴────────┘');
+  const rows = [native, wire, tr].map(makeRow);
 
-  console.log('\n  Tool calls:', native.toolNames);
+  console.log('  ┌──────────────┬───────────┬───────────┬───────────┬────────┬────────┬────────┐');
+  console.log('  │ Mode         │    Output │     Input │     Total │   Time │  Calls │ Saving │');
+  console.log('  ├──────────────┼───────────┼───────────┼───────────┼────────┼────────┼────────┤');
+  for (const row of rows) {
+    console.log(
+      '  │ ' +
+        row.mode.padEnd(12) +
+        ' │ ' +
+        fmt(row.out).padStart(9) +
+        ' │ ' +
+        fmt(row.inp).padStart(9) +
+        ' │ ' +
+        fmt(row.total).padStart(9) +
+        ' │ ' +
+        String(row.ms).padStart(6) +
+        'ms' +
+        ' │ ' +
+        String(row.calls).padStart(6) +
+        ' │ ' +
+        row.savings.padStart(6) +
+        ' │',
+    );
+  }
+  console.log('  └──────────────┴───────────┴───────────┴───────────┴────────┴────────┴────────┘');
+
   console.log('');
-  console.log(`  Wire output savings:      ${((1 - wire.outputTok / native.outputTok) * 100).toFixed(1)}%`);
-  console.log(`  ToolResult output savings: ${((1 - tr.outputTok / native.outputTok) * 100).toFixed(1)}%`);
+  console.log('  Tool calls: ' + native.toolNames);
   console.log('');
 
   // Cost estimate
   const OUTPUT_COST = 15; // $/M tok Sonnet
   const INPUT_COST = 3;
-  const nativeDollars = (native.outputTok / 1e6 * OUTPUT_COST + native.inputTok / 1e6 * INPUT_COST);
-  const wireDollars = (wire.outputTok / 1e6 * OUTPUT_COST + wire.inputTok / 1e6 * INPUT_COST);
-  console.log(`  Cost this call: native=$${nativeDollars.toFixed(5)}  wire=$${wireDollars.toFixed(5)}  (save $${(nativeDollars - wireDollars).toFixed(5)})`);
-  console.log(`  Scaled to 10K calls/day: native=$${(nativeDollars * 10000).toFixed(2)}  wire=$${(wireDollars * 10000).toFixed(2)}  (save $${((nativeDollars - wireDollars) * 10000).toFixed(2)})`);
+  const nativeDollars = (native.outputTok / 1_000_000 * OUTPUT_COST + native.inputTok / 1_000_000 * INPUT_COST);
+  const wireDollars = (wire.outputTok / 1_000_000 * OUTPUT_COST + wire.inputTok / 1_000_000 * INPUT_COST);
+  const trDollars = (tr.outputTok / 1_000_000 * OUTPUT_COST + tr.inputTok / 1_000_000 * INPUT_COST);
+
+  console.log('  Cost breakdown:');
+  console.log('    Native:     $' + nativeDollars.toFixed(5) + '  (' + fmt(native.outputTok) + ' out · ' + fmt(native.inputTok) + ' in)');
+  console.log('    Wire:       $' + wireDollars.toFixed(5) + '  (' + fmt(wire.outputTok) + ' out · ' + fmt(wire.inputTok) + ' in)' + (wireDollars < nativeDollars ? '  ✅' : '  ❌'));
+  console.log('    ToolResult: $' + trDollars.toFixed(5) + '  (' + fmt(tr.outputTok) + ' out · ' + fmt(tr.inputTok) + ' in)' + (trDollars < nativeDollars ? '  ✅' : '  ❌'));
+
+  const wireSave = nativeDollars - wireDollars;
+  const trSave = nativeDollars - trDollars;
+  console.log('');
+  console.log('  Savings vs Native:');
+  console.log('    Wire:       ' + (wireSave >= 0 ? '$' + wireSave.toFixed(5) + ' saved' : '$' + Math.abs(wireSave).toFixed(5) + ' extra') + '  (' + ((native.outputTok - wire.outputTok) / native.outputTok * 100).toFixed(1) + '% fewer out tok)');
+  console.log('    ToolResult: ' + (trSave >= 0 ? '$' + trSave.toFixed(5) + ' saved' : '$' + Math.abs(trSave).toFixed(5) + ' extra') + '  (' + ((native.outputTok - tr.outputTok) / native.outputTok * 100).toFixed(1) + '% fewer out tok)');
+  console.log('');
+
+  const SCALE = 10_000;
+  console.log('  At ' + fmt(SCALE) + ' calls/day:');
+  console.log('    Native:     $' + (nativeDollars * SCALE).toFixed(2) + '/day');
+  console.log('    Wire:       $' + (wireDollars * SCALE).toFixed(2) + '/day  (' + (wireSave >= 0 ? 'save $' + (wireSave * SCALE).toFixed(2) : 'cost $' + Math.abs(wireSave * SCALE).toFixed(2) + ' more') + ')');
+  console.log('    ToolResult: $' + (trDollars * SCALE).toFixed(2) + '/day  (' + (trSave >= 0 ? 'save $' + (trSave * SCALE).toFixed(2) : 'cost $' + Math.abs(trSave * SCALE).toFixed(2) + ' more') + ')');
   console.log('');
 }
 

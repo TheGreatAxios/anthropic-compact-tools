@@ -46,7 +46,7 @@ interface ResolvedOptions {
 function resolveOptions(options: CompactToolsOptions): ResolvedOptions {
   return {
     syntax: options.syntax ?? 'wire',
-    placement: options.placement ?? 'first_user',
+    placement: options.placement ?? 'system',
     rewriteHistory: options.rewriteHistory ?? true,
     minifyToolDefinitions: options.minifyToolDefinitions ?? false,
   };

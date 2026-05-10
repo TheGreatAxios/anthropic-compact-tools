@@ -194,16 +194,16 @@ describe('generateFormatInstruction', () => {
     expect(inst).toContain('<tool_result name=');
   });
 
-  test('still produces available-tools section when given an empty plans array', () => {
+  test('produces short format instruction even with empty plans', () => {
     const inst = generateFormatInstruction('wire', []);
-    expect(inst).toContain('Available tools');
+    expect(inst).toContain('# Compact tool calling');
+    expect(inst).toContain('<call>');
     expect(inst).not.toContain('getWeather');
   });
 
-  test('includes inline examples for wire-format rules', () => {
+  test('includes compact JSON syntax in instruction for wire mode', () => {
     const inst = generateFormatInstruction('wire', plans);
-    expect(inst).toContain('key=value');
-    expect(inst).toContain('Arrays');
-    expect(inst).toContain('Booleans');
+    expect(inst).toContain('<call>name {\"key\":\"value\"}</call>');
+    expect(inst).toContain('getWeather');
   });
 });

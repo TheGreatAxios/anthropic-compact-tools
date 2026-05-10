@@ -93,9 +93,9 @@ describe('CompactAnthropic', () => {
       tools: [weatherTool],
     } as any);
 
-    // Assert: request was transformed (format instruction injected)
+    // Assert: request was transformed (format instruction injected into system prompt)
     expect(capturedParams).toBeDefined();
-    expect(capturedParams.messages[0].content).toContain('# Compact tool calling');
+    expect(capturedParams.system).toContain('# Compact tool calling');
 
     // Assert: response was transformed (compact text → tool_use block)
     const toolUse = result.content.find((c: any) => c.type === 'tool_use');

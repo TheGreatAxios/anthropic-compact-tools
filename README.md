@@ -110,9 +110,52 @@ profile.name=Alice     → nested objects (dot-path flattening)
 ## Benchmark
 
 ```sh
-bun run bench               # Offline token comparison (no API key)
-ANTHROPIC_API_KEY=sk-... bun run bench:live              # Real API benchmark
-bun run bench:live --compare --save   # Compare saved runs, export markdown
+bun run bench                          # Offline token comparison (no API key)
+ANTHROPIC_API_KEY=sk-... bun run bench:live             # Real API benchmark
+ANTHROPIC_API_KEY=sk-... bun run bench:live --model claude-haiku-4-5  # Specific model
+bun run bench:live --compare --save              # Compare saved runs
+```
+
+### Live benchmark output example
+
+```
+  ═══════════════════════════════════════════════════════════════
+  │   Compact Tool Calling — Live Benchmark                    │
+  │   Model: claude-haiku-4-5                                  │
+  │   11 prompts × 3 modes = 33 API calls                     │
+  │   Pricing: $1.00/M in · $5.00/M out                       │
+  ═══════════════════════════════════════════════════════════════
+
+  [ 0] What is the weather in Austin?
+       Native:   54 tok ✓   Wire:   55 tok ✓   ToolResult:   54 tok ✓
+  [ 1] Search for wireless earbuds.
+       Native:   57 tok ✓   Wire:   57 tok ✓   ToolResult:   57 tok ✓
+  [ 5] Get the weather in Austin and Dallas, then calculate…
+       Native:  107 tok ✗   Wire:  107 tok ✗   ToolResult:  141 tok ✗
+
+  ═══════════════════════════════════════════════════════════════
+  │                     RESULTS — claude-haiku-4-5              │
+  ═══════════════════════════════════════════════════════════════
+
+  ┌─────────────────────────┬─────────────┬─────────────┬─────────────┐
+  │ Metric                  │      Native │        Wire │  ToolResult │
+  ├─────────────────────────┼─────────────┼─────────────┼─────────────┤
+  │ Output tokens           │       1,322 │       1,703 │       1,703 │
+  │   Δ vs Native           │           — │      +28.8% │      +28.8% │
+  │ Input tokens            │       9,126 │      11,678 │      11,678 │
+  │   Δ vs Native           │           — │      +28.0% │      +28.0% │
+  │ Accuracy                │        5/11 │        5/11 │        5/11 │
+  │   Δ vs Native           │           — │        same │        same │
+  ├─────────────────────────┼─────────────┼─────────────┼─────────────┤
+  │ Cost (this run)         │     $0.0157 │     $0.0202 │     $0.0202 │
+  │   Δ vs Native           │           — │      +0.44¢ │      +0.44¢ │
+  │ Cost @ 1K calls/day     │      $15.74 │      $20.19 │      $20.00 │
+  │ Cost @ 10K calls/day    │     $157.36 │     $201.93 │     $200.03 │
+  ├─────────────────────────┼─────────────┼─────────────┼─────────────┤
+  │ Recommendation           │   (baseline) │    ❌  Worse │    ❌  Worse │
+  └─────────────────────────┴─────────────┴─────────────┴─────────────┘
+
+  Results saved: /path/to/results/claude-haiku-4-5-123456789.json
 ```
 
 ## Tests

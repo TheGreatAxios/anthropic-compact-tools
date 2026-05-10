@@ -134,25 +134,12 @@ export function planTools(tools: AnthropicTool[]): ToolPlan[] {
 
 export function generateFormatInstruction(syntax: 'wire' | 'tool_result', plans: ToolPlan[]): string {
   const formatDesc = syntax === 'tool_result'
-    ? `<tool_result name="toolName">key=value key2="quoted value"</tool_result>`
-    : `<call>toolName key=value key2="quoted value"</call>`;
+    ? `<tool_result name="name">{"key":"value"}</tool_result>`
+    : `<call>name {"key":"value"}</call>`;
 
   return [
     '# Compact tool calling',
-    '',
-    'Instead of standard tool_use JSON, use compact format:',
-    formatDesc,
-    '',
-    '- Bare values: text=hello',
-    '- Quoted values: message="hello world"',
-    '- Arrays: attendees=["a@c.com","b@c.com"]',
-    '- Nested: profile.displayName=Alice',
-    '- Booleans: active=true',
-    '- Numbers: count=42',
-    '',
-    'Only this format is parsed for tool calls. Standard JSON tool_use blocks will be ignored.',
-    '',
-    '## Available tools',
+    `Use ${formatDesc} instead of tool_use JSON.`,  
     '',
     ...plans.map(p => `- ${p.signature}`),
   ].join('\n');

@@ -67,20 +67,26 @@ export function parseCompactCalls(text: string, plans: ToolPlan[]): ParsedCall[]
   const planByName = new Map(plans.map(p => [p.name, p]));
   const calls: ParsedCall[] = [];
 
-  // Try both formats
+  // Try both formats — skip malformed calls instead of crashing
   for (const span of findCallSpans(text)) {
-    const { toolName, argsBody } = splitNameAndBody(span.body);
-    const plan = planByName.get(toolName);
-    if (!plan) continue; // unknown tool, skip
-    const input = encodeArgs(argsBody, plan);
-    calls.push({ toolName, input, start: span.start, end: span.end });
+    try {
+      const { toolName, argsBody } = splitNameAndBody(span.body);
+      const plan = planByName.get(toolName);
+      if (!plan) continue;
+      calls.push({ toolName, input: encodeArgs(argsBody, plan), start: span.start, end: span.end });
+    } catch {
+      // Malformed call — skip it, don't lose other calls
+    }
   }
 
   for (const span of findToolResultSpans(text)) {
-    const plan = planByName.get(span.toolName);
-    if (!plan) continue;
-    const input = encodeArgs(span.body, plan);
-    calls.push({ toolName: span.toolName, input, start: span.start, end: span.end });
+    try {
+      const plan = planByName.get(span.toolName);
+      if (!plan) continue;
+      calls.push({ toolName: span.toolName, input: encodeArgs(span.body, plan), start: span.start, end: span.end });
+    } catch {
+      // Malformed call — skip
+    }
   }
 
   return calls;
@@ -100,16 +106,31 @@ export function splitNameAndBody(body: string): { toolName: string; argsBody: st
 
 // ── Args encoding ───────────────────────────────────────────
 
+/**
+ * Encode args body to JSON string.
+ * Auto-detects JSON vs wire format: if body starts with `{` it's JSON regardless of plan encoding.
+ * This means the model can use either `<call>name {"key":"val"}</call>` or `<call>name key=val</call>`.
+ */
 export function encodeArgs(argsBody: string, plan: ToolPlan): string {
-  if (plan.encoding === 'json') {
-    return parseJsonBody(argsBody);
+  const trimmed = argsBody.trim();
+
+  // Auto-detect JSON body (starts with {)
+  if (trimmed.startsWith('{')) {
+    return parseJsonBody(trimmed);
   }
-  const flat = parseWireBody(argsBody, plan);
-  const hasDotPaths = plan.fields.some(f => f.name.includes('.'));
-  if (hasDotPaths) {
-    return JSON.stringify(reconstructNested(flat));
+
+  // Wire format (key=value pairs)
+  if (plan.encoding === 'wire') {
+    const flat = parseWireBody(trimmed, plan);
+    const hasDotPaths = plan.fields.some(f => f.name.includes('.'));
+    if (hasDotPaths) {
+      return JSON.stringify(reconstructNested(flat));
+    }
+    return JSON.stringify(flat);
   }
-  return JSON.stringify(flat);
+
+  // Plan says json but body doesn't start with { — try JSON anyway (model might have omitted braces?)
+  return parseJsonBody(trimmed);
 }
 
 function parseJsonBody(body: string): string {
