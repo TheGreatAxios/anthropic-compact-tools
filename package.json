@@ -1,6 +1,6 @@
 {
   "name": "anthropic-compact-tools",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Compact-syntax tool calling for the Anthropic TypeScript SDK. Replaces verbose tool_use JSON with a compact wire format to reduce output tokens.",
   "type": "module",
   "sideEffects": false,
