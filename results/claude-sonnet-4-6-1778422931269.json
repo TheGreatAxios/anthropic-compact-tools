@@ -1,0 +1,127 @@
+{
+  "model": "claude-sonnet-4-6",
+  "timestamp": "2026-05-10T14:22:11.269Z",
+  "pricing": {
+    "input": 3,
+    "output": 15
+  },
+  "native": {
+    "out": 1669,
+    "in": 9137,
+    "acc": 5
+  },
+  "wire": {
+    "out": 4480,
+    "in": 3593,
+    "acc": 11
+  },
+  "tr": {
+    "out": 4548,
+    "in": 3659,
+    "acc": 11
+  },
+  "nativeCost": 0.05244599999999999,
+  "wireCost": 0.07797899999999999,
+  "trCost": 0.079197,
+  "perPrompt": [
+    {
+      "diff": 0,
+      "native": 67,
+      "wire": 77,
+      "tr": 163,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 1,
+      "native": 57,
+      "wire": 269,
+      "tr": 167,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 2,
+      "native": 69,
+      "wire": 21,
+      "tr": 102,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 3,
+      "native": 134,
+      "wire": 251,
+      "tr": 207,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 4,
+      "native": 102,
+      "wire": 28,
+      "tr": 28,
+      "nOk": true,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 5,
+      "native": 107,
+      "wire": 209,
+      "tr": 215,
+      "nOk": false,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 6,
+      "native": 94,
+      "wire": 427,
+      "tr": 403,
+      "nOk": false,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 7,
+      "native": 191,
+      "wire": 377,
+      "tr": 334,
+      "nOk": false,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 8,
+      "native": 105,
+      "wire": 495,
+      "tr": 640,
+      "nOk": false,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 9,
+      "native": 334,
+      "wire": 1067,
+      "tr": 1103,
+      "nOk": false,
+      "wOk": true,
+      "tOk": true
+    },
+    {
+      "diff": 10,
+      "native": 409,
+      "wire": 1259,
+      "tr": 1186,
+      "nOk": false,
+      "wOk": true,
+      "tOk": true
+    }
+  ]
+}
