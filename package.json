@@ -24,10 +24,9 @@
     "build": "tsdown",
     "prepublishOnly": "bun run build",
     "typecheck": "bunx tsc --noEmit",
-    "bench": "bun run bench/bench-v2.ts",
+    "bench": "bun run bench/bench-v1.ts",
     "bench:v1": "bun run bench/bench-v1.ts",
-    "bench:v2": "bun run bench/bench-v2.ts",
-    "bench:live": "bun run bench/bench-v2.ts",
+    "bench:live": "bun run bench/bench-v1.ts",
     "ab-test": "bun run bench/ab-test.ts",
     "compare": "bun run bench/compare.ts"
   },

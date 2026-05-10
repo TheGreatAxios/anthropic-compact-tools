@@ -558,15 +558,9 @@ All accuracy and cost numbers in this document were collected at **standard infe
 ## Appendix: Running the Benchmarks
 
 ```bash
-# Full v1 benchmark (3 modes, 33 calls)
+# Full benchmark (3 modes, 33 calls)
 ANTHROPIC_API_KEY=sk-... bun run bench:v1 --model claude-haiku-4-5
 ANTHROPIC_API_KEY=sk-... bun run bench:v1 --model claude-sonnet-4-6
-
-# A/B test for format instructions
-ANTHROPIC_API_KEY=sk-... bun run ab-test
-
-# v2 benchmark (input-side optimization only)
-ANTHROPIC_API_KEY=sk-... bun run bench:v2 --model claude-haiku-4-5
 ```
 
 Results are saved to `results/` directory as JSON files.
