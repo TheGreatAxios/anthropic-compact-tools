@@ -132,15 +132,47 @@ export function planTools(tools: AnthropicTool[]): ToolPlan[] {
 
 // ── Format instruction generator ─────────────────────────────
 
-export function generateFormatInstruction(syntax: 'wire' | 'tool_result', plans: ToolPlan[]): string {
+export function generateFormatInstruction(syntax: 'wire' | 'tool_result', plans: ToolPlan[], opts?: { includeToolDefs?: boolean }): string {
   const formatDesc = syntax === 'tool_result'
-    ? `<tool_result name="name">{"key":"value"}</tool_result>`
-    : `<call>name {"key":"value"}</call>`;
+    ? `<tool_result name="toolName">key=value key2="quoted value"</tool_result>`
+    : `<call>toolName key=value key2="quoted value"</call>`;
 
-  return [
+  const lines: string[] = [
     '# Compact tool calling',
-    `Use ${formatDesc} instead of tool_use JSON.`,  
+    'You have tools available. Call them using this compact format ONLY:',
+    formatDesc,
     '',
-    ...plans.map(p => `- ${p.signature}`),
-  ].join('\n');
+    'Rules:',
+    '- Simple: text=hello',
+    '- Multi-word: message="hello world"',
+    '- Numbers: count=42',
+    '- Booleans: active=true',
+    '',
+    '# DO NOT use standard tool_use JSON format — it is NOT available.',
+    'Only <call> format is supported.',
+    '',
+    'Example:',
+    '<call>get_weather location=Austin units=imperial</call>',
+    '',
+  ];
+
+  if (opts?.includeToolDefs) {
+    lines.push('Available tools and their parameters:');
+    lines.push('');
+    for (const p of plans) {
+      const fields = p.fields.map(f => {
+        const required = f.required ? '(required)' : '(optional)';
+        return `    - ${f.name} (${f.type}) ${required}`;
+      }).join('\n');
+      lines.push(`${p.name}: ${p.description || ''}`);
+      if (fields) lines.push(fields);
+      lines.push('');
+    }
+    lines.push('Use <call> format to call any of the above tools.');
+  } else {
+    lines.push('Available tools:');
+    lines.push(...plans.map(p => `- ${p.signature}`));
+  }
+
+  return lines.join('\n');
 }

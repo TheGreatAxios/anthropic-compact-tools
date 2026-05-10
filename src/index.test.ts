@@ -83,7 +83,7 @@ describe('CompactAnthropic', () => {
       return fakeResponse;
     };
 
-    const client = new CompactAnthropic(inner, { syntax: 'wire' });
+    const client = new CompactAnthropic(inner, { syntax: 'wire', stripTools: false });
 
     // Act
     const result = await client.messages.create({
@@ -93,12 +93,14 @@ describe('CompactAnthropic', () => {
       tools: [weatherTool],
     } as any);
 
-    // Assert: request was transformed (tools minified by default, no format instruction)
+    // Assert: request was transformed (tools minified by default, format instruction injected)
     expect(capturedParams).toBeDefined();
     // Tool definitions are minified (descriptions stripped)
     expect((capturedParams.tools[0].input_schema as any).properties.location.description).toBeUndefined();
-    // No format instruction injected into system or messages
-    expect(capturedParams.system).toBeUndefined();
+    // Format instruction injected into system prompt (default placement)
+    expect(typeof capturedParams.system).toBe('string');
+    expect((capturedParams.system as string).includes('<call>')).toBe(true);
+    // Original user message unchanged
     expect(capturedParams.messages[0].content).toBe('Weather?');
 
     // Assert: response was transformed (compact text → tool_use block)

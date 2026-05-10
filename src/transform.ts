@@ -2,23 +2,20 @@
  * Request/response transform logic.
  *
  * Before the API call:
- *   1. Minify tool definitions (strip verbose descriptions from JSON Schema)
- *   2. Plan tools (for history rewriting and response parsing)
- *   3. Rewrite conversation history (tool_use → compact)
+ *   1. Inject format instruction if syntax='wire' (encourages compact output)
+ *   2. Minify tool definitions (strip verbose descriptions from JSON Schema)
+ *   3. Plan tools (for history rewriting and response parsing)
+ *   4. Rewrite conversation history (tool_use → compact text)
  *
  * After the API call (non-streaming):
  *   1. Scan text content blocks for compact format
  *   2. Convert to synthetic tool_use blocks
  *
- * No format instruction is injected — the model uses native JSON output.
- * Compact format is only used for history compression and as an optional
- * output format the model may adopt naturally from seeing it in context.
- *
  * For streaming, see stream.ts.
  */
 
 import type { ToolPlan, CompactToolsOptions, AnthropicTool, MessagesCreateParams, MessageResponse, ContentBlock } from './types.ts';
-import { planTools } from './signature.ts';
+import { planTools, generateFormatInstruction } from './signature.ts';
 import { rewriteHistory } from './serialize.ts';
 import { parseCompactCalls } from './parser.ts';
 
@@ -68,23 +65,17 @@ export function minifyToolDefs(tools: AnthropicTool[]): AnthropicTool[] {
 /**
  * Transform request parameters before sending to the Anthropic API.
  *
- * Two optimizations (both input-side only):
- *  1. Minify tool definitions — strip verbose descriptions from JSON Schema
- *  2. Rewrite conversation history — prior tool_use → compact text
+ * Three optimizations:
+ *  1. Inject compact format instruction (if syntax='wire')
+ *  2. Minify tool definitions — strip verbose descriptions
+ *  3. Rewrite history — prior tool_use → compact text
  *
- * No format instruction is injected into the prompt. The model uses native
- * JSON tool_use blocks for its own output. Compact format is only used for
- * history compression (smaller multi-turn context).
- *
- * On the output side, transformResponse() transparently accepts both native
- * JSON tool_use blocks and compact <call> format if the model picks it up
- * from history.
- *
- * Preserves prompt caching: minified tools array stays intact.
+ * If syntax='wire', injects a format instruction either in the system prompt
+ * (default, better for caching) or the first user message (placement='first_user').
  */
 export function transformRequest(
   params: MessagesCreateParams,
-  options: Required<Pick<CompactToolsOptions, 'syntax' | 'placement' | 'rewriteHistory'>> & Pick<CompactToolsOptions, 'minifyToolDefinitions'>,
+  options: Required<Pick<CompactToolsOptions, 'syntax' | 'placement' | 'rewriteHistory' | 'stripTools'>> & Pick<CompactToolsOptions, 'minifyToolDefinitions'>,
 ): {
   params: MessagesCreateParams;
   plans: ToolPlan[];
@@ -96,16 +87,50 @@ export function transformRequest(
     return { params, plans: [] };
   }
 
-  // Plan tools (needed for history rewriting and response parsing)
+  // Plan tools
   const plans = planTools(tools);
 
-  // Minify tool definitions to reduce cached input tokens
+  // Minify tool definitions
   const finalTools = options.minifyToolDefinitions ? minifyToolDefs(tools) : tools;
 
-  // Clone params to avoid mutating the caller's object
+  // Clone params
   const out: MessagesCreateParams = { ...params, tools: finalTools as typeof params.tools };
 
-  // Rewrite history if enabled — convert past tool_use blocks to compact format
+  // Inject format instruction if syntax is wire, or if tools are being stripped
+  // (when stripTools is on, the model needs to know the available tools)
+  if (options.syntax === 'wire' || options.stripTools) {
+    const instruction = generateFormatInstruction(options.syntax, plans, {
+      includeToolDefs: options.stripTools,
+    });
+
+    if (options.placement === 'system') {
+      const existingSystem = out.system ?? '';
+      const sysStr = typeof existingSystem === 'string' ? existingSystem : '';
+      out.system = `${sysStr}\n\n${instruction}`.trim();
+    } else if (out.messages && out.messages.length > 0) {
+      const messages = [...out.messages];
+      const firstUserIdx = messages.findIndex(m => m.role === 'user');
+      if (firstUserIdx >= 0) {
+        const msg = messages[firstUserIdx];
+        if (msg.role === 'user') {
+          const currentContent = typeof msg.content === 'string' ? msg.content : '';
+          messages[firstUserIdx] = {
+            ...msg,
+            content: instruction + '\n\n' + currentContent,
+          };
+        }
+      }
+      out.messages = messages;
+    }
+  }
+
+  // Strip tools from API call when using compact format
+  // This forces the model to use text-based compact calls since native tool_use is unavailable
+  if (options.stripTools) {
+    delete (out as any).tools;
+  }
+
+  // Rewrite history if enabled
   if (options.rewriteHistory) {
     out.messages = rewriteHistory(out.messages ?? [], plans, options.syntax);
   }

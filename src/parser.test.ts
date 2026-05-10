@@ -253,8 +253,10 @@ describe('parseWireBody', () => {
     expect(result).toEqual({ location: 'Austin', units: 'metric' });
   });
 
-  test('throws ToolReduceParseError when a token lacks an = sign', () => {
-    expect(() => parseWireBody('badtoken', weatherPlan)).toThrow(ToolReduceParseError);
+  test('handles orphaned token by appending to previous value', () => {
+    // When a token lacks an =, it's assumed to be a continuation of the previous string value
+    const result = parseWireBody('query=wireless earbuds', weatherPlan);
+    expect(result).toEqual({ query: 'wireless earbuds' });
   });
 
   test('returns an empty object for an empty body string', () => {

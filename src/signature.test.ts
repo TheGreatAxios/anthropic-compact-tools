@@ -201,9 +201,9 @@ describe('generateFormatInstruction', () => {
     expect(inst).not.toContain('getWeather');
   });
 
-  test('includes compact JSON syntax in instruction for wire mode', () => {
+  test('includes compact key=value syntax in instruction for wire mode', () => {
     const inst = generateFormatInstruction('wire', plans);
-    expect(inst).toContain('<call>name {\"key\":\"value\"}</call>');
+    expect(inst).toContain('<call>toolName key=value key2="quoted value"</call>');
     expect(inst).toContain('getWeather');
   });
 });

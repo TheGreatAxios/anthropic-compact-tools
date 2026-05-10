@@ -232,9 +232,10 @@ async function runBenchmark() {
       } else {
         const opts = {
           syntax: mode as 'wire' | 'tool_result',
-          placement: 'first_user' as const,
+          placement: 'system' as const,
           rewriteHistory: false,
           minifyToolDefinitions: false,
+          stripTools: true,
         };
         const { params: transformed, plans } = transformRequest(base, opts);
         response = transformResponse(

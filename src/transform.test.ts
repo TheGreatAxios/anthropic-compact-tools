@@ -139,24 +139,27 @@ describe('transformRequest', () => {
     expect(params.tools).toBeUndefined();
   });
 
-  test('does not inject format instruction into the first user message', () => {
+  test('injects format instruction into the first user message when syntax=wire', () => {
     const { params } = transformRequest(
       { ...baseParams, tools: [weatherTool] },
       options,
     );
     const firstMsg = params.messages![0];
     expect(typeof firstMsg.content).toBe('string');
-    // User message is unchanged — no format instruction injected
-    expect(firstMsg.content).toBe('Weather?');
+    // Format instruction is prepended
+    expect((firstMsg.content as string).includes('<call>')).toBe(true);
+    expect((firstMsg.content as string).includes('Weather?')).toBe(true);
   });
 
-  test('does not inject format instruction into system prompt', () => {
+  test('injects format instruction into system prompt when placement=system', () => {
     const { params } = transformRequest(
       { ...baseParams, system: 'Be helpful.', tools: [weatherTool] },
       { ...options, placement: 'system' },
     );
-    // System prompt is unchanged — no format instruction injected
-    expect(params.system).toBe('Be helpful.');
+    // System prompt gets the format instruction appended
+    expect(typeof params.system).toBe('string');
+    expect((params.system as string).includes('<call>')).toBe(true);
+    expect((params.system as string).includes('Be helpful.')).toBe(true);
   });
 
   test('generates tool plans from the original tool definitions', () => {

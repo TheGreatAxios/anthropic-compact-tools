@@ -156,18 +156,30 @@ export function parseWireBody(body: string, plan: ToolPlan): Record<string, unkn
   const out: Record<string, unknown> = {};
   if (!body) return out;
   const tokens = tokenizeWire(body);
+
+  // Track last key for reassembling unquoted multi-word values
+  let lastKey: string | null = null;
+
   for (const tok of tokens) {
     const eq = tok.indexOf('=');
+
     if (eq === -1) {
-      throw new ToolReduceParseError(
-        `Expected key=value, got "${tok}" in tool "${plan.name}"`,
-        { toolName: plan.name, body },
-      );
+      // Orphaned token — likely a continuation of an unquoted string value
+      if (lastKey && typeof out[lastKey] === 'string') {
+        out[lastKey] = (out[lastKey] as string) + ' ' + tok;
+      }
+      // If no lastKey, skip silently
+      continue;
     }
+
     const key = tok.slice(0, eq);
     const rawVal = tok.slice(eq + 1);
     const field = plan.fields.find(f => f.name === key);
+
+    // If key already exists and is a string, its value was split by spaces.
+    // Newer occurrence wins (last one gets the full value).
     out[key] = coerceValue(rawVal, field?.type);
+    lastKey = key;
   }
   return out;
 }

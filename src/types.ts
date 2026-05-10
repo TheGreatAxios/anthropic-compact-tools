@@ -11,8 +11,14 @@ export interface CompactToolsOptions {
   placement?: 'system' | 'first_user';
   formatInstruction?: string;
   rewriteHistory?: boolean;
-  /** OPT-IN: strip descriptions from tool JSON Schema. Off by default — output savings dwarf input. */
+  /** Strip verbose descriptions from tool JSON Schema to reduce input tokens. */
   minifyToolDefinitions?: boolean;
+  /** 
+   * Strip `tools` from the API call and inject tool definitions into the 
+   * system message instead. This FORCES the model to use compact text format 
+   * since native tool_use blocks are not available. Defaults to `true`.
+   */
+  stripTools?: boolean;
   debug?: boolean;
 }
 

@@ -41,6 +41,7 @@ interface ResolvedOptions {
   placement: 'system' | 'first_user';
   rewriteHistory: boolean;
   minifyToolDefinitions: boolean;
+  stripTools: boolean;
 }
 
 function resolveOptions(options: CompactToolsOptions): ResolvedOptions {
@@ -49,6 +50,7 @@ function resolveOptions(options: CompactToolsOptions): ResolvedOptions {
     placement: options.placement ?? 'system',
     rewriteHistory: options.rewriteHistory ?? true,
     minifyToolDefinitions: options.minifyToolDefinitions ?? true,
+    stripTools: options.stripTools ?? true,
   };
 }
 
